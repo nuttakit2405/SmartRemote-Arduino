@@ -22,8 +22,8 @@ WiFiManager wifiManager;
 // MQTT
 const char *mqtt_server = "cctonline.dyndns.org";
 const char *topic = "/INPUT/AIRCON/57";
-const char *mqtt_username = "cctadmin";
-const char *mqtt_password = "iotadminsoi21";
+const char *mqtt_username = "username";
+const char *mqtt_password = "password";
 const int mqtt_port = 1883;
 String msg = " ";
 String powers = " ";
