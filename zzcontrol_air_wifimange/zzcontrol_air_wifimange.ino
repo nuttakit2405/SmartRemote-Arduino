@@ -7,6 +7,7 @@
 #include <ir_Toshiba.h>
 #include <ir_Carrier.h>
 #include <ir_Gree.h>
+#include <ir_Samsung.h>
 #include <ESP8266WiFi.h>
 #include <WiFiManager.h>
 #include <PubSubClient.h>
@@ -21,9 +22,9 @@ WiFiManager wifiManager;
 
 // MQTT
 const char *mqtt_server = "cctonline.dyndns.org";
-const char *topic = "/INPUT/AIRCON/57";
-const char *mqtt_username = "username";
-const char *mqtt_password = "password";
+const char *topic = "/INPUT/AIRCON/53";
+const char *mqtt_username = "....";
+const char *mqtt_password = "....";
 const int mqtt_port = 1883;
 String msg = " ";
 String powers = " ";
@@ -78,6 +79,9 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
     } else if (strVal == "1=6") {
         brand = "6";
         Serial.println("Brand : Trane(GreeAC)");
+    } else if (strVal == "1=7") {
+        brand = "7";
+        Serial.println("Brand : Samsung");
     }
     //    id 2 ON/OFF Air
     if (strVal == "2=1") {
@@ -180,7 +184,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
       Serial.println("Swing(V) : 6(Swing)");
     } 
 
-    //    id 7 Swing(H)
+//    id 7 Swing(H)
     if (strVal == "7=1") {
       swingh = 1;
       Serial.println("Swing(H) : 1(LeftMax)");
@@ -209,9 +213,9 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
     valPosition = strtok(NULL, delimiters);
     
   }
-
+// ------End substring-------------------------------------------------
 //  Control AIR
-  if (brand == "1") {
+  if (brand == "1") { // #brand1
     IRMitsubishiAC ac(kIrLed);
     ac.begin();
     delay(200);
@@ -299,7 +303,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
       ac.send();
       Serial.println(ac.toString());
     } 
-  } else if (brand == "3") {
+  } else if (brand == "3") { // brand3
     IRDaikinESP ac(kIrLed);
     ac.begin();
     delay(200);
@@ -344,7 +348,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
       ac.send();
       Serial.println(ac.toString());
     } 
-  } else if (brand == "4") {
+  } else if (brand == "4") { // brand4
     
     IRToshibaAC ac(kIrLed);
     
@@ -395,7 +399,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
       Serial.println("a rawData capture from IRrecvDumpV2");
       irsend.sendRaw(rawData, 295, 38);  // Send a raw data capture at 38kHz.
     }
-  } else if (brand == "5") {
+  } else if (brand == "5") { // brand5
     IRCarrierAc64 ac(kIrLed);
     ac.begin();
     delay(200);
@@ -428,7 +432,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
       ac.send();
       Serial.println(ac.toString());
     } 
-  } else if (brand == "6") {
+  } else if (brand == "6") { // brand6
     IRGreeAC ac(kIrLed);
     ac.begin();
     delay(200);
@@ -484,6 +488,47 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
       Serial.println("Send A/C.");
       ac.send();
     } 
+  } else if (brand == "7") { // brand7
+    IRSamsungAc ac(kIrLed);
+    ac.begin();
+    delay(200);
+    if (powers == "on") {
+      ac.on();
+    } else if (powers == "off") {
+      ac.off();
+    }
+    // fan_samsung
+    if (fan_lv == 0) {
+      ac.setFan(kSamsungAcFanAuto);
+    } else if (fan_lv == 1) {
+      ac.setFan(kSamsungAcFanLow);
+    } else if (fan_lv == 2) {
+      ac.setFan(kSamsungAcFanMed);
+    } else if (fan_lv == 3) {
+      ac.setFan(kSamsungAcFanHigh);
+    }
+    ac.setSwing(false);
+    // mode_samsung
+    if (mode_ac == 0) {
+      ac.setMode(kSamsungAcAuto);
+    } else if (mode_ac == 1) {
+      ac.setMode(kSamsungAcCool);
+    } else if (mode_ac == 2) {
+      ac.setMode(kSamsungAcDry);
+    } else if (mode_ac == 3) {
+      ac.setMode(kSamsungAcHeat);
+    } else if (mode_ac == 4) {
+      ac.setMode(kSamsungAcFan);
+    }
+    
+    ac.setTemp(temp_ac);
+    
+    Serial.println(ac.toString());
+    
+    if (powers == "on" || powers == "off") {
+      Serial.println("Send A/C.");
+      ac.send();
+    } 
   }
   
   msg = "";
@@ -517,7 +562,7 @@ void setup() {
   Serial.begin(115200);
   
   wifiManager.setTimeout(180);
-  if(!wifiManager.autoConnect("CCT-Air-AP")) {
+  if(!wifiManager.autoConnect("CCT-Air-AP2")) {
     Serial.println("failed to connect and hit timeout");
     delay(3000);
     ESP.reset();
