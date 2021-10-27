@@ -21,7 +21,7 @@ WiFiManager wifiManager;
 
 
 // MQTT
-const char *mqtt_server = "cctonline.dyndns.org";
+const char *mqtt_server = "....";
 const char *topic = "/INPUT/AIRCON/53";
 const char *mqtt_username = "....";
 const char *mqtt_password = "....";
