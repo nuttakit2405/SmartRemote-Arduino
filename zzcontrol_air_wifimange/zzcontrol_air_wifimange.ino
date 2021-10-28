@@ -21,10 +21,10 @@ WiFiManager wifiManager;
 
 
 // MQTT
-const char *mqtt_server = "....";
+const char *mqtt_server = ".";
 const char *topic = "/INPUT/AIRCON/53";
-const char *mqtt_username = "....";
-const char *mqtt_password = "....";
+const char *mqtt_username = ".";
+const char *mqtt_password = ".";
 const int mqtt_port = 1883;
 String msg = " ";
 String powers = " ";
@@ -203,9 +203,9 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
     } else if (strVal == "7=6") {
       swingh = 6;
       Serial.println("Swing(H) : 6(Wide)");
-    } else if (strVal == "7=8") {
-      swingh = 8;
-      Serial.println("Swing(H) : 8(Auto)");
+    } else if (strVal == "7=0") {
+      swingh = 0;
+      Serial.println("Swing(H) : 0(Auto)");
     }
 
     
@@ -269,7 +269,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
       ac.setWideVane(kMitsubishiAcWideVaneRightMax);
     } else if (swingh == 6) {
       ac.setWideVane(kMitsubishiAcWideVaneWide);
-    } else if (swingh == 8) {
+    } else if (swingh == 0) {
       ac.setWideVane(kMitsubishiAcWideVaneAuto);
     } 
     // -------------------------------------
@@ -460,21 +460,21 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
     if (swingh == 0) {
       ac.setSwingVertical(true, kGreeSwingAuto);
     } else if (swingh == 1) {
-      ac.setSwingVertical(false, kGreeSwingUp);
+      ac.setSwingVertical(true, kGreeSwingUp);
     } else if (swingh == 2) {
-      ac.setSwingVertical(false, kGreeSwingMiddleUp);
+      ac.setSwingVertical(true, kGreeSwingMiddleUp);
     } else if (swingh == 3) {
-      ac.setSwingVertical(false, kGreeSwingMiddle);
+      ac.setSwingVertical(true, kGreeSwingMiddle);
     } else if (swingh == 4) {
-      ac.setSwingVertical(false, kGreeSwingMiddleDown);
+      ac.setSwingVertical(true, kGreeSwingMiddleDown);
     } else if (swingh == 5) {
-      ac.setSwingVertical(false, kGreeSwingDown);
+      ac.setSwingVertical(true, kGreeSwingDown);
     } else if (swingh == 6) {
-      ac.setSwingVertical(false, kGreeSwingDownAuto);
+      ac.setSwingVertical(true, kGreeSwingDownAuto);
     } else if (swingh == 7) {
-      ac.setSwingVertical(false, kGreeSwingMiddleAuto);
+      ac.setSwingVertical(true, kGreeSwingMiddleAuto);
     } else if (swingh == 8) {
-      ac.setSwingVertical(false, kGreeSwingUpAuto);
+      ac.setSwingVertical(true, kGreeSwingUpAuto);
     }
     
     ac.setXFan(false);
@@ -532,6 +532,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
   }
   
   msg = "";
+  Serial.println();
   Serial.println("-----------------------");
     
 }
