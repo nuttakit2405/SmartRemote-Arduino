@@ -20,11 +20,16 @@ PubSubClient client(espClient);
 WiFiManager wifiManager;
 
 
+int LEDD1 = D1; // ขา D1
+int LEDD5 = D5; // ขา D5
+int LEDD6 = D6; // ขา D6
+
 // MQTT
-const char *mqtt_server = ".";
+const char *mqtt_server = "cctonline.dyndns.org";
 const char *topic = "/INPUT/AIRCON/53";
-const char *mqtt_username = ".";
-const char *mqtt_password = ".";
+const char *topic2 = "/INPUT/AIRSTA/53";
+const char *mqtt_username = "cctadmin";
+const char *mqtt_password = "iotadminsoi21";
 const int mqtt_port = 1883;
 String msg = " ";
 String powers = " ";
@@ -87,11 +92,17 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
     if (strVal == "2=1") {
       powers = "on";
       Serial.println("AIR : ON");
-      digitalWrite(BUILTIN_LED, HIGH);
+      client.publish(topic2, "99=1");
+      digitalWrite(LEDD5, HIGH);
+//      delay(100);
+//      digitalWrite(LEDD5, LOW);
     } else if (strVal == "2=0") {
       powers = "off";
       Serial.println("AIR : OFF");
-      digitalWrite(BUILTIN_LED, LOW);
+      client.publish(topic2, "99=0");
+//      digitalWrite(LEDD5, HIGH);
+//      delay(100);
+      digitalWrite(LEDD5, LOW);
     }
 //    id 3 Mode Air
     if (strVal == "3=1") {
@@ -208,6 +219,17 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
       Serial.println("Swing(H) : 0(Auto)");
     }
 
+//    publish to web
+    if (strVal == "98=10") {
+      client.publish(topic2, "98=1");
+      Serial.println("Device : ON");
+    }
+    if (strVal == "99=0") {
+      Serial.println("status : Off");
+    } else if (strVal == "99=1") {
+      Serial.println("status : On");
+    }
+
     
 //    Cut Data by delimiters
     valPosition = strtok(NULL, delimiters);
@@ -276,7 +298,10 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
     
     if (powers == "on" || powers == "off") {
       Serial.println("Send A/C.");
+      digitalWrite(LEDD6, HIGH);
+      delay(10);
       ac.send();
+      digitalWrite(LEDD6, LOW);
       Serial.println(ac.toString());
     }
   } else if (brand == "2") { // brand2
@@ -299,15 +324,18 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
       ac.setCmd(kFujitsuAcCmdTurnOff);
     }
     if (powers == "on" || powers == "off") {
-      Serial.println("Send A/C.");      
+      Serial.println("Send A/C.");
+      digitalWrite(LEDD6, HIGH);
+      delay(10);
       ac.send();
+      digitalWrite(LEDD6, LOW); 
       Serial.println(ac.toString());
     } 
   } else if (brand == "3") { // brand3
     IRDaikinESP ac(kIrLed);
     ac.begin();
     delay(200);
-    if (powers == "on") {
+    if (powers == "on" && brand) {
       ac.on();
     } else if (powers == "off") {
       ac.off();
@@ -345,10 +373,13 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
     
     if (powers == "on" || powers == "off") {
       Serial.println("Send A/C.");
+      digitalWrite(LEDD6, HIGH);
+      delay(10);
       ac.send();
+      digitalWrite(LEDD6, LOW);
       Serial.println(ac.toString());
     } 
-  } else if (brand == "4") { // brand4
+  } else if (brand == "4" || brand == "5") { // brand4
     
     IRToshibaAC ac(kIrLed);
     
@@ -387,7 +418,10 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
     
     if (powers == "on") {
       Serial.println("Send A/C.");
+      digitalWrite(LEDD6, HIGH);
+      delay(10);
       ac.send();
+      digitalWrite(LEDD6, LOW);
     } else if (powers == "off") {
       IRsend irsend(kIrLed);
       irsend.begin();
@@ -396,8 +430,12 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
       uint16_t rawData[295] = {4592, 4204,  734, 1434,  734, 1430,  732, 1434,  732, 1432,  734, 348,  734, 352,  734, 1430,  732, 350,  732, 350,  732, 350,  732, 350,  732, 350,  732, 1436,  732, 1430,  732, 352,  732, 1432,  732, 350,  732, 350,  734, 348,  734, 348,  734, 348,  734, 350,  734, 1432,  732, 1434,  732, 1434,  734, 1430,  734, 1434,  732, 1432,  732, 1436,  732, 1432,  734, 348,  734, 350,  734, 350,  732, 350,  732, 350,  732, 352,  732, 350,  732, 350,  732, 350,  732, 1432,  734, 348,  734, 1434,  730, 1434,  732, 350,  732, 352,  734, 348,  734, 348,  734, 350,  734, 348,  732, 350,  732, 350,  732, 350,  732, 350,  732, 1434,  734, 1430,  732, 1434,  732, 352,  732, 350,  732, 350,  732, 350,  732, 350,  732, 350,  732, 352,  734, 348,  732, 350,  732, 1436,  732, 1434,  732, 352,  732, 348,  734, 1432,  732, 1434,  732, 350,  732, 6520,  4592, 4204,  734, 1434,  732, 1432,  734, 1432,  736, 1430,  736, 346,  736, 350,  736, 1428,  736, 348,  734, 346,  736, 346,  736, 346,  736, 346,  736, 1430,  736, 1430,  734, 350,  734, 1432,  734, 348,  734, 346,  736, 346,  736, 346,  734, 348,  734, 350,  734, 1432,  732, 1432,  734, 1432,  734, 1430,  732, 1434,  732, 1432,  734, 1434,  734, 1430,  734, 348,  734, 350,  732, 350,  732, 350,  732, 350,  734, 352,  734, 348,  736, 346,  734, 348,  734, 1432,  732, 350,  732, 1434,  732, 1432,  734, 348,  734, 350,  734, 348,  734, 348,  734, 350,  732, 350,  732, 348,  732, 350,  734, 348,  734, 348,  734, 1434,  732, 1430,  732, 1434,  732, 352,  734, 348,  734, 348,  734, 348,  734, 348,  734, 348,  734, 350,  734, 346,  732, 350,  732, 1434,  736, 1428,  736, 348,  736, 344,  736, 1430,  734, 1432,  736, 346,  736};  // TOSHIBA_AC
       uint8_t state[9] = {0xF2, 0x0D, 0x03, 0xFC, 0x01, 0x60, 0x07, 0x00, 0x66};
       
-      Serial.println("a rawData capture from IRrecvDumpV2");
+//      Serial.println("a rawData capture from IRrecvDumpV2");
+      digitalWrite(LEDD6, HIGH);
+      delay(10);
+      
       irsend.sendRaw(rawData, 295, 38);  // Send a raw data capture at 38kHz.
+      digitalWrite(LEDD6, LOW);
     }
   } else if (brand == "5") { // brand5
     IRCarrierAc64 ac(kIrLed);
@@ -429,7 +467,10 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
     
     if (powers == "on" || powers == "off") {
       Serial.println("Send A/C.");
+      digitalWrite(LEDD6, HIGH);
+      delay(10);
       ac.send();
+      digitalWrite(LEDD6, LOW);
       Serial.println(ac.toString());
     } 
   } else if (brand == "6") { // brand6
@@ -486,7 +527,10 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
     
     if (powers == "on" || powers == "off") {
       Serial.println("Send A/C.");
+      digitalWrite(LEDD6, HIGH);
+      delay(10);
       ac.send();
+      digitalWrite(LEDD6, LOW);
     } 
   } else if (brand == "7") { // brand7
     IRSamsungAc ac(kIrLed);
@@ -527,11 +571,17 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
     
     if (powers == "on" || powers == "off") {
       Serial.println("Send A/C.");
+      digitalWrite(LEDD6, HIGH);
+      delay(10);
       ac.send();
+      digitalWrite(LEDD6, LOW);
     } 
+  } else if (brand == "88") {
+      Serial.println("Please select BrandAC");
   }
   
   msg = "";
+  client.publish(topic2, "98=1");
   Serial.println();
   Serial.println("-----------------------");
     
@@ -540,39 +590,46 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
 void mqttReconnect() {
     // reconnect code from PubSubClient example
     while (!client.connected()) {
-    Serial.print("Attempting MQTT connection...");
-    // Create a random client ID
-    String clientId = "ESP8266Client-";
-    clientId += String(random(0xffff), HEX);
-    // Attempt to connect
-    if (client.connect(clientId.c_str())) {
-      Serial.println("MQTT connected");
-      client.publish(topic, "AirCon Ready!!");
-      client.subscribe(topic);
-    } else {
-      Serial.print("failed, rc=");
-      Serial.print(client.state());
-      Serial.println(" try again in 3 seconds");
-      ESP.reset();
-      delay(3000);
+      Serial.print("Attempting MQTT connection...");
+      // Create a random client ID
+      String clientId = "ESP8266Client-";
+      clientId += String(random(0xffff), HEX);
+      // Attempt to connect
+      if (client.connect(clientId.c_str())) {
+        Serial.println("MQTT connected");
+        client.publish(topic, "98=1");
+        client.subscribe(topic);
+      } else {
+        Serial.print("failed, rc=");
+        Serial.print(client.state());
+        Serial.println(" try again in 3 seconds");
+        ESP.reset();
+        delay(3000);
+      }
     }
-  }
 }
 
 void setup() {
   Serial.begin(115200);
-  
+  pinMode(LEDD1, OUTPUT);
+  pinMode(LEDD5, OUTPUT);
+  pinMode(LEDD6, OUTPUT);
   wifiManager.setTimeout(180);
   if(!wifiManager.autoConnect("CCT-Air-AP2")) {
     Serial.println("failed to connect and hit timeout");
+    digitalWrite(LEDD1, LOW);
     delay(3000);
     ESP.reset();
     delay(5000);
   } 
 
-  Serial.println("connected...yeey :)");
+  Serial.println("connected...");
+  digitalWrite(LEDD1, HIGH);
 
   client.setServer(mqtt_server, mqtt_port);
+  
+  
+  
   client.setCallback(mqttCallback);
   while (!client.connected()) {
       String client_id = "esp8266-client-";
@@ -581,7 +638,7 @@ void setup() {
       Serial.printf("The client %s connects to the public mqtt broker\n", client_id.c_str());
       if (client.connect(client_id.c_str(), mqtt_username, mqtt_password)) {
           Serial.println("MQTT connected");
-          client.publish(topic, "AirCon Ready!!");
+          client.publish(topic2, "98=1");
           client.subscribe(topic);
       } else {
           Serial.print("failed with state ");
@@ -590,7 +647,7 @@ void setup() {
           delay(2000);
       }
   }
-//  client.publish(topic, "AirCon Ready!!");
+//  client.publish(topic2, "98=1");
 //  client.subscribe(topic);
 }
 
@@ -601,10 +658,12 @@ void loop() {
 //    ESP.reset();
 //    delay(5000);
 //  } 
+  
   if (!client.connected()) {
     mqttReconnect();
   }
   
   client.loop();
+  
   yield();
 }
