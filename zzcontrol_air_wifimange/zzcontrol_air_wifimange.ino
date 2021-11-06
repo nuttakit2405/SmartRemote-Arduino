@@ -26,8 +26,8 @@ int LEDD6 = D6; // ขา D6
 
 // MQTT
 const char *mqtt_server = "...";
-const char *topic = "/INPUT/AIRCON/53";
-const char *topic2 = "/INPUT/AIRSTA/53";
+const char *topic = "/INPUT/AIRCON/54";
+const char *topic2 = "/INPUT/AIRSTA/54";
 const char *mqtt_username = "...";
 const char *mqtt_password = "...";
 const int mqtt_port = 1883;
@@ -87,6 +87,9 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
     } else if (strVal == "1=7") {
         brand = "7";
         Serial.println("Brand : Samsung");
+    } else if (strVal == "1=88") {
+        brand = "88";
+        Serial.println("Please select BrandAC");
     }
     //    id 2 ON/OFF Air
     if (strVal == "2=1") {
@@ -218,8 +221,15 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
       swingh = 0;
       Serial.println("Swing(H) : 0(Auto)");
     }
+//    Reset Device 
+    if (strVal == "91=1") {
+      client.publish(topic2, "98=0");
+      Serial.println("Reset..");
+      delay(5000);
+      ESP.restart();
+    }
 
-//    publish to web
+//    publish to web 98:Device, 99:StatusA/C
     if (strVal == "98=10") {
       client.publish(topic2, "98=1");
       Serial.println("Device : ON");
@@ -300,7 +310,10 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
       Serial.println("Send A/C.");
       digitalWrite(LEDD6, HIGH);
       delay(10);
-      ac.send();
+      if (brand != "88") {
+        ac.send();
+      }
+      
       digitalWrite(LEDD6, LOW);
       Serial.println(ac.toString());
     }
@@ -576,8 +589,9 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
       ac.send();
       digitalWrite(LEDD6, LOW);
     } 
-  } else if (brand == "88") {
-      Serial.println("Please select BrandAC");
+  } else if (brand == "88") { // brand88
+    Serial.println("Please select BrandAC");
+    delay(200);
   }
   
   msg = "";
