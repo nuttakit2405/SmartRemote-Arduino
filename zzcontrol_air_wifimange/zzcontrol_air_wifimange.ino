@@ -25,11 +25,11 @@ int LEDD5 = D5; // ขา D5
 int LEDD6 = D6; // ขา D6
 
 // MQTT
-const char *mqtt_server = "cctonline.dyndns.org";
+const char *mqtt_server = "...";
 const char *topic = "/INPUT/AIRCON/54";
 const char *topic2 = "/INPUT/AIRSTA/54";
-const char *mqtt_username = "cctadmin";
-const char *mqtt_password = "iotadminsoi21";
+const char *mqtt_username = "...";
+const char *mqtt_password = "...";
 const int mqtt_port = 1883;
 String msg = " ";
 String powers = " ";
