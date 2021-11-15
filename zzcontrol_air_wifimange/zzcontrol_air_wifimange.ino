@@ -25,11 +25,11 @@ int LEDD5 = D5; // ขา D5
 int LEDD6 = D6; // ขา D6
 
 // MQTT
-const char *mqtt_server = "...";
-const char *topic = "/INPUT/AIRCON/54";
-const char *topic2 = "/INPUT/AIRSTA/54";
-const char *mqtt_username = "...";
-const char *mqtt_password = "...";
+const char *mqtt_server = "cctonline.dyndns.org";
+const char *topic = "/INPUT/AIRCON/92";
+const char *topic2 = "/INPUT/AIRSTA/92";
+const char *mqtt_username = "cctadmin";
+const char *mqtt_password = "iotadminsoi21";
 const int mqtt_port = 1883;
 String msg = " ";
 String powers = " ";
@@ -196,7 +196,10 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
     } else if (strVal == "6=6") {
       swingv = 6;
       Serial.println("Swing(V) : 6(Swing)");
-    } 
+    } else if (strVal == "6=10") {
+      swingv = 10;
+      Serial.println("Swing(V) : OFF");
+    }
 
 //    id 7 Swing(H)
     if (strVal == "7=1") {
@@ -220,12 +223,15 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
     } else if (strVal == "7=0") {
       swingh = 0;
       Serial.println("Swing(H) : 0(Auto)");
+    } else if (strVal == "7=10") {
+      swingh = 10;
+      Serial.println("Swing(H) : 10(OFF)");
     }
 //    Reset Device 
     if (strVal == "91=1") {
       client.publish(topic2, "98=0");
       Serial.println("Reset..");
-      delay(5000);
+      delay(3000);
       ESP.restart();
     }
 
@@ -378,11 +384,17 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
     }
     
     ac.setTemp(temp_ac);
-    
-    ac.setSwingVertical(false);
-    ac.setSwingHorizontal(false);
-    
-    Serial.println(ac.toString());
+    if (swingv == 10){
+      ac.setSwingVertical(false);
+    } else {
+      ac.setSwingVertical(true);
+    }
+
+    if (swingh == 10){
+      ac.setSwingHorizontal(false);
+    } else {
+      ac.setSwingHorizontal(true);
+    }
     
     if (powers == "on" || powers == "off") {
       Serial.println("Send A/C.");
@@ -529,6 +541,8 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
       ac.setSwingVertical(true, kGreeSwingMiddleAuto);
     } else if (swingh == 8) {
       ac.setSwingVertical(true, kGreeSwingUpAuto);
+    } else if (swingh == 10) {
+      ac.setSwingVertical(false, kGreeSwingUpAuto);
     }
     
     ac.setXFan(false);
@@ -610,11 +624,13 @@ void mqttReconnect() {
       clientId += String(random(0xffff), HEX);
       // Attempt to connect
       if (client.connect(clientId.c_str())) {
+        digitalWrite(LEDD1, HIGH);
         Serial.println("MQTT connected");
         client.publish(topic, "98=1");
         client.subscribe(topic);
       } else {
         Serial.print("failed, rc=");
+        digitalWrite(LEDD1, LOW);
         Serial.print(client.state());
         Serial.println(" try again in 3 seconds");
         ESP.reset();
@@ -638,7 +654,7 @@ void setup() {
   } 
 
   Serial.println("connected...");
-  digitalWrite(LEDD1, HIGH);
+  
 
   client.setServer(mqtt_server, mqtt_port);
   
@@ -651,10 +667,13 @@ void setup() {
       
       Serial.printf("The client %s connects to the public mqtt broker\n", client_id.c_str());
       if (client.connect(client_id.c_str(), mqtt_username, mqtt_password)) {
+          digitalWrite(LEDD1, HIGH);
           Serial.println("MQTT connected");
           client.publish(topic2, "98=1");
           client.subscribe(topic);
+          
       } else {
+          digitalWrite(LEDD1, LOW);
           Serial.print("failed with state ");
           Serial.print(client.state());
           ESP.reset();
